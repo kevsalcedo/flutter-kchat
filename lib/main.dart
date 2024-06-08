@@ -11,7 +11,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'kchat App',
-      initialRoute: 'login',
+      initialRoute: 'chat',
       routes: appRoutes,
     );
   }
