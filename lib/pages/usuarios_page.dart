@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:kchat/models/usuario.dart';
+import 'package:kchat/services/auth_service.dart';
+import 'package:provider/provider.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 
 class UsuariosPage extends StatefulWidget {
@@ -19,10 +21,13 @@ class _UsuariosPageState extends State<UsuariosPage> {
 
   @override
   Widget build(BuildContext context) {
+    final authService = Provider.of<AuthService>(context);
+    final usuario = authService.usuario;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'User name',
+          '${usuario!.name} kchats!',
           style: const TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.bold,
@@ -31,7 +36,11 @@ class _UsuariosPageState extends State<UsuariosPage> {
         elevation: 1,
         backgroundColor: Colors.cyan[400],
         leading: IconButton(
-          onPressed: () {},
+          onPressed: () {
+            //TODO: Desconectar del socket server
+            Navigator.pushReplacementNamed(context, 'login');
+            AuthService.deleteToken();
+          },
           icon: const Icon(
             Icons.exit_to_app,
             color: Colors.white,

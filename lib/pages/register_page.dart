@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:kchat/helpers/show_alert.dart';
+import 'package:provider/provider.dart';
+
+import 'package:kchat/services/auth_service.dart';
+
 import 'package:kchat/widgets/custom_button.dart';
 import 'package:kchat/widgets/custom_input.dart';
 import 'package:kchat/widgets/labels.dart';
@@ -19,9 +24,15 @@ class RegisterPage extends StatelessWidget {
             child: const Column(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                Logo(text: 'Register',),
+                Logo(
+                  text: 'Register',
+                ),
                 _Form(),
-                Labels(route: 'login', text: '¿Ya tienes una cuenta?', textLink: 'Ingresa con ella ahora!',),
+                Labels(
+                  route: 'login',
+                  text: '¿Ya tienes una cuenta?',
+                  textLink: 'Ingresa con ella ahora!',
+                ),
                 Text(
                   'Terminos y condiciones de uso',
                   style: TextStyle(fontWeight: FontWeight.w200),
@@ -49,6 +60,8 @@ class __FormState extends State<_Form> {
 
   @override
   Widget build(BuildContext context) {
+    final authService = Provider.of<AuthService>(context);
+
     return Container(
       margin: const EdgeInsets.only(top: 40),
       padding: const EdgeInsets.symmetric(horizontal: 50),
@@ -76,9 +89,23 @@ class __FormState extends State<_Form> {
           const SizedBox(height: 8),
           CustomButton(
             text: 'Register',
-            onPressed: () {
-              print(emailController.text);
-            },
+            onPressed: authService.registering
+                ? null
+                : () async {
+                    final registerOk = await authService.register(
+                      nameController.text.trim(),
+                      emailController.text.trim(),
+                      passwordController.text.trim(),
+                    );
+
+                    if (registerOk == true) {
+                      //conectar al socket server
+                      Navigator.pushReplacementNamed(context, 'usuarios');
+                      
+                    } else {
+                      showAlert(context, 'Error in registration', registerOk);
+                    }
+                  },
           ),
         ],
       ),

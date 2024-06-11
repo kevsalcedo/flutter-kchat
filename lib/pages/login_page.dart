@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:kchat/helpers/show_alert.dart';
+import 'package:kchat/services/auth_service.dart';
 import 'package:kchat/widgets/custom_button.dart';
 import 'package:kchat/widgets/custom_input.dart';
 import 'package:kchat/widgets/labels.dart';
 import 'package:kchat/widgets/logo.dart';
+import 'package:provider/provider.dart';
 
 class LoginPage extends StatelessWidget {
   const LoginPage({super.key});
@@ -19,9 +22,15 @@ class LoginPage extends StatelessWidget {
             child: const Column(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                Logo(text: 'KChat',),
+                Logo(
+                  text: 'KChat',
+                ),
                 _Form(),
-                Labels(route: 'register', text: '¿No tienes una cuenta?', textLink: 'Crea una ahora!',),
+                Labels(
+                  route: 'register',
+                  text: '¿No tienes una cuenta?',
+                  textLink: 'Crea una ahora!',
+                ),
                 Text(
                   'Terminos y condiciones de uso',
                   style: TextStyle(fontWeight: FontWeight.w200),
@@ -48,6 +57,8 @@ class __FormState extends State<_Form> {
 
   @override
   Widget build(BuildContext context) {
+    final authService = Provider.of<AuthService>(context);
+
     return Container(
       margin: const EdgeInsets.only(top: 40),
       padding: const EdgeInsets.symmetric(horizontal: 50),
@@ -69,9 +80,29 @@ class __FormState extends State<_Form> {
           const SizedBox(height: 8),
           CustomButton(
             text: 'Login',
-            onPressed: () {
-              print(emailController.text);
-            },
+            onPressed: authService.authenticating
+                ? null
+                : () async {
+                    //!Quitar el teclado
+                    FocusScope.of(context).unfocus();
+
+                    final loginOk = await authService.login(
+                      emailController.text.trim(),
+                      passwordController.text.trim(),
+                    );
+
+                    if (loginOk) {
+                      //TODO: conectar a nuestro socket server
+                      Navigator.pushReplacementNamed(context, 'usuarios');
+                    } else {
+                      //show alert
+                      showAlert(
+                        context,
+                        'Incorrect credentials',
+                        'Please validate your data again',
+                      );
+                    }
+                  },
           ),
         ],
       ),

@@ -20,6 +20,8 @@ class CustomButton extends StatelessWidget {
       highlightElevation: 5,
       color: Colors.cyan[400],
       shape: const StadiumBorder(),
+      disabledColor: Colors.grey,
+      disabledTextColor: Colors.black,
       child: Container(
         width: double.infinity,
         height: 55,
