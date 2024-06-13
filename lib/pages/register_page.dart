@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:kchat/helpers/show_alert.dart';
 import 'package:provider/provider.dart';
 
+import 'package:kchat/helpers/show_alert.dart';
+
+import 'package:kchat/services/socket_service.dart';
 import 'package:kchat/services/auth_service.dart';
 
 import 'package:kchat/widgets/custom_button.dart';
@@ -61,6 +63,7 @@ class __FormState extends State<_Form> {
   @override
   Widget build(BuildContext context) {
     final authService = Provider.of<AuthService>(context);
+    final socketService = Provider.of<SocketService>(context);
 
     return Container(
       margin: const EdgeInsets.only(top: 40),
@@ -99,9 +102,8 @@ class __FormState extends State<_Form> {
                     );
 
                     if (registerOk == true) {
-                      //conectar al socket server
+                      socketService.connect();
                       Navigator.pushReplacementNamed(context, 'usuarios');
-                      
                     } else {
                       showAlert(context, 'Error in registration', registerOk);
                     }

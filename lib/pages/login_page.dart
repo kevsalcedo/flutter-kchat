@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:kchat/helpers/show_alert.dart';
 import 'package:kchat/services/auth_service.dart';
+import 'package:kchat/services/socket_service.dart';
 import 'package:kchat/widgets/custom_button.dart';
 import 'package:kchat/widgets/custom_input.dart';
 import 'package:kchat/widgets/labels.dart';
@@ -58,6 +59,7 @@ class __FormState extends State<_Form> {
   @override
   Widget build(BuildContext context) {
     final authService = Provider.of<AuthService>(context);
+    final socketService = Provider.of<SocketService>(context);
 
     return Container(
       margin: const EdgeInsets.only(top: 40),
@@ -92,7 +94,7 @@ class __FormState extends State<_Form> {
                     );
 
                     if (loginOk) {
-                      //TODO: conectar a nuestro socket server
+                      socketService.connect();
                       Navigator.pushReplacementNamed(context, 'usuarios');
                     } else {
                       //show alert

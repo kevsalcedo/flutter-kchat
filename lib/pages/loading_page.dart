@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:kchat/services/auth_service.dart';
 import 'package:provider/provider.dart';
+
+import 'package:kchat/services/auth_service.dart';
+import 'package:kchat/services/socket_service.dart';
 
 class LoadingPage extends StatelessWidget {
   const LoadingPage({super.key});
@@ -22,12 +24,14 @@ class LoadingPage extends StatelessWidget {
 
   Future checkLoginState(BuildContext context) async {
     final authService = Provider.of<AuthService>(context, listen: false);
+        final socketService = Provider.of<SocketService>(context, listen: false);
+
     
     final authenticated = await authService.isLoggedIn();
       print(authenticated);
 
     if (authenticated) {
-      //TODO: Conectar al socket service
+      socketService.connect();
       Navigator.pushReplacementNamed(context, 'usuarios');
     } else {
       print('Sin token');

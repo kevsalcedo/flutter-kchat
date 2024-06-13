@@ -1,8 +1,14 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:kchat/models/messages_response.dart';
+import 'package:kchat/services/auth_service.dart';
+import 'package:kchat/services/chat_service.dart';
+import 'package:kchat/services/socket_service.dart';
+
 import 'dart:io';
 
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
 import 'package:kchat/widgets/chat_message.dart';
+import 'package:provider/provider.dart';
 
 class ChatPage extends StatefulWidget {
   @override
@@ -10,6 +16,10 @@ class ChatPage extends StatefulWidget {
 }
 
 class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
+  late ChatService chatService;
+  late SocketService socketService;
+  late AuthService authService;
+
   final _textController = TextEditingController();
   final _focusNode = FocusNode();
 
@@ -18,24 +28,72 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
   List<ChatMessage> _messages = [];
 
   @override
+  void initState() {
+    super.initState();
+    chatService = Provider.of<ChatService>(context, listen: false);
+    socketService = Provider.of<SocketService>(context, listen: false);
+    authService = Provider.of<AuthService>(context, listen: false);
+
+    socketService.socket.on('private-msg', _listenMessage);
+
+    _loadHistory(chatService.userFor.uid);
+  }
+
+  void _loadHistory(String userID) async {
+    List<Msg> chat = await chatService.getChat(userID);
+
+    final history = chat.map(
+      (m) => ChatMessage(
+        uid: m.from,
+        text: m.msg,
+        animationController: AnimationController(
+            vsync: this, duration: Duration(milliseconds: 0))
+          ..forward(),
+      ),
+    );
+    setState(() {
+      _messages.insertAll(0, history);
+    });
+  }
+
+  void _listenMessage(dynamic payload) {
+    ChatMessage message = ChatMessage(
+      uid: payload['from'],
+      text: payload['msg'],
+      animationController: AnimationController(
+        vsync: this,
+        duration: const Duration(milliseconds: 300),
+      ),
+    );
+
+    setState(() {
+      _messages.insert(0, message);
+    });
+
+    message.animationController.forward();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final userFor = chatService.userFor;
+
     return Scaffold(
       appBar: AppBar(
         title: Row(
           children: [
             CircleAvatar(
-              child: Text(
-                'KS',
-                style: TextStyle(fontSize: 18),
-              ),
               backgroundColor: Colors.white,
               foregroundColor: Colors.cyan,
+              child: Text(
+                userFor.name.substring(0, 2),
+                style: const TextStyle(fontSize: 18),
+              ),
             ),
-            SizedBox(width: 16),
+            const SizedBox(width: 16),
             Text(
-              'Kevin Salcedo',
-              style:
-                  TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              userFor.name,
+              style: const TextStyle(
+                  color: Colors.white, fontWeight: FontWeight.bold),
             )
           ],
         ),
@@ -126,7 +184,7 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
     _focusNode.requestFocus();
 
     final newMessage = ChatMessage(
-      uid: '123',
+      uid: authService.usuario!.uid,
       text: message,
       animationController: AnimationController(
         vsync: this,
@@ -139,15 +197,21 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
     setState(() {
       _isWritting = false;
     });
+
+    socketService.socket.emit('private-msg', {
+      'from': authService.usuario!.uid,
+      'for': chatService.userFor.uid,
+      'msg': message,
+    });
   }
 
   @override
   void dispose() {
-    // TODO: off del socket
-
     for (ChatMessage message in _messages) {
       message.animationController.dispose();
     }
+
+    socketService.socket.off('private-msg');
     super.dispose();
   }
 }
